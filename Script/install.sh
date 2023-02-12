@@ -3,7 +3,12 @@
 check_package () {
    rpm -qa |grep "$1"
    status=$?
-   [ $status -eq 0 ] && echo "command successful" || echo "command unsuccessful"
+   if [[ $status -eq 0 ]];
+   then
+      echo "command successful"
+   else
+      echo "command unsuccessful"
+   fi
 }
 
 for package in `cat ./Packages/package.list`
