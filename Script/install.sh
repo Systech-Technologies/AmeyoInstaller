@@ -4,5 +4,8 @@ hello_world () {
    echo 'hello, world'
 }
 
-hello_world
-echo "Sript Complete !!"
+for package in `cat ../Packages/package.list`
+do
+   echo "Package : $package"
+done
+
