@@ -8,7 +8,7 @@ check_package () {
       grep "$1" ./Packages/package.version >> ./Packages/package.tmp
       cat ./Packages/package.tmp |sort -r |head -1
       latest_version=`cat ./Packages/package.tmp |sort -r |head -1`
-      if [[ "$1" == *$latest_version* ]]; then
+      if [[ "$1" == *"$latest_version"* ]]; then
          echo "Package: $1 | version is up to date"
       else
          echo "Package: $1 | has an updated version"
