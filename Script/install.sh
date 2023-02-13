@@ -53,7 +53,16 @@ sshpass -p "$password" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyC
 for package in `cat ./Packages/package.list`
 do
    echo "Package : $package"
-   check_package "$package" "$password"
+   if grep -q "postgres" <<< "$package"; then
+      echo "Fresh Install ?  initilize DB ?(Y/N)"
+      read dbresp
+      if [[ "$dbresp" == "Y" ]]; then
+         /usr/pgsql-10/bin/postgresql-10-setup initdb
+         systemctl restart postgresql-10.service
+      fi
+   else
+      check_package "$package" "$password"
+   fi
    echo " ---- Completed : $package ----- "
    echo " ---- Press Enter to continue ----- "
    read next
