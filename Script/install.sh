@@ -54,5 +54,8 @@ for package in `cat ./Packages/package.list`
 do
    echo "Package : $package"
    check_package "$package" "$password"
+   echo " ---- Completed : $package ----- "
+   echo " ---- Press Enter to continue ----- "
+   read next
 done
 
