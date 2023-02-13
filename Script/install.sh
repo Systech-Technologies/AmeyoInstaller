@@ -12,7 +12,7 @@ check_package () {
          echo "Package: $1 | version is up to date"
       else
          echo "Package: $1 | has an updated version"
-         sshpass -p "ftea.com" scp -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
+         sshpass -p "$2" scp -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
       fi
    else
       echo "command unsuccessful"
@@ -20,11 +20,14 @@ check_package () {
 }
 
 echo "Generating the Latest Package List"
-sshpass -p "ftea.com" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyChecking no" "cd /dacx/Ameyo_package;ls" > ./Packages/package.version
+
+echo " Please enter the Repository Server Password"
+read password
+sshpass -p "$password" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyChecking no" "cd /dacx/Ameyo_package;ls" > ./Packages/package.version
 
 for package in `cat ./Packages/package.list`
 do
    echo "Package : $package"
-   check_package "$package"
+   check_package "$package" "$password"
 done
 
