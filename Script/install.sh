@@ -6,7 +6,7 @@ check_package () {
    if [[ $status -eq 0 ]];
    then
       grep "$1" ./Packages/package.version >> ./Packages/package.tmp
-      latest_version =  `cat ./Packages/package.tmp |sort |-r |head`
+      latest_version= `cat ./Packages/package.tmp |sort -r |head`
       if [[ $1 == *$latest_version* ]]; then
          echo "Package: $1 | version is up to date"
       else
