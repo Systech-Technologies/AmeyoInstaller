@@ -13,6 +13,10 @@ check_package () {
       else
          echo "Package: $1 | has an updated version"
          sshpass -p "$2" scp -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
+         FILE=./Packages/Repository/$latest_version
+         if [ -f "$FILE" ]; then
+            rpm -Uvh $FILE
+         fi
       fi
    else
       echo "command unsuccessful"
