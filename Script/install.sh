@@ -17,17 +17,34 @@ check_package () {
          FILE=./Packages/Repository/$latest_version
          if [ -f "$FILE" ]; then
             rpm -Uvh $FILE
+            rpm -qa |grep "$1"
+            status=$?
+            if [[ $status -eq 0 ]];then
+               echo "Package: $1 | Package Updated"
+            fi
          fi
       fi
    else
-      echo "command unsuccessful"
+      echo "Package: $1 | Not yet installed |pulling the Package"
+      sshpass -p "$2" scp -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
+      FILE=./Packages/Repository/$latest_version
+         FILE=./Packages/Repository/$latest_version
+         if [ -f "$FILE" ]; then
+            rpm -Uvh $FILE
+            rpm -qa |grep "$1"
+            status=$?
+            if [[ $status -eq 0 ]];then
+               echo "Package: $1 | Package Installed"
+            fi
+         fi
    fi
 }
 
 echo "Generating the Latest Package List"
 
 echo " Please enter the Repository Server Password"
-read password
+# read password
+password='ftea.com'
 sshpass -p "$password" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyChecking no" "cd /dacx/Ameyo_package;ls" > ./Packages/package.version
 
 for package in `cat ./Packages/package.list`
