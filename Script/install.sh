@@ -58,6 +58,8 @@ do
       read dbresp
       if [[ "$dbresp" == "Y" ]]; then
          /usr/pgsql-10/bin/postgresql-10-setup initdb
+         updatedb
+         sed -i -e "/^host/s/ident/trust/" /var/lib/pgsql/10/data/pg_hba.conf
          systemctl restart postgresql-10.service
       fi
    else
