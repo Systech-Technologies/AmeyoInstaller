@@ -26,6 +26,9 @@ check_package () {
       fi
    else
       echo "Package: $1 | Not yet installed |pulling the Package"
+      grep "$1" ./Packages/package.version > ./Packages/package.tmp
+      cat ./Packages/package.tmp |sort -r |head -1
+      latest_version=`cat ./Packages/package.tmp |sort -r |head -1`
       sshpass -p "$2" scp -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
       FILE=./Packages/Repository/$latest_version
          FILE=./Packages/Repository/$latest_version
