@@ -88,6 +88,18 @@ do
          systemctl start djinn.service
          systemctl status djinn.service
       fi
+      if grep -q "ameyocrm" <<< "$package"; then
+         ameyoctl service crm restart
+         ameyoctl service crm status
+      fi
+      if grep -q "acp" <<< "$package"; then
+         ameyoctl service acp status |grep NOT_RUNNING
+         status=$?
+         if [[ $status -eq 0 ]];then
+            ameyoctl service acp restart
+         fi
+
+      fi
       if grep -q "asterisk13" <<< "$package"; then
          ls -al /usr/lib64/libcrypto.so.1.0.0
          status=$?
