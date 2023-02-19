@@ -114,9 +114,33 @@ check_package () {
    fi
 }
 
-echo "Generating the Latest Package List"
+gen_banner () {
 
-echo " Please enter the Repository Server Password"
+echo "";echo "";echo ""
+echo $1
+echo "";echo "";echo ""
+}
+gen_header () {
+
+echo "";echo "";echo ""
+echo $1
+echo "";echo "";echo ""
+}
+gen_info () {
+
+echo "";echo "";echo ""
+echo $1
+echo "";echo "";echo ""
+}
+
+
+
+gen_banner " --- Welcome to Ameyo Package Installer Script --- "
+
+gen_header " ----- !!!!!      Generating the Latest Package List      !!!!! ----- "
+
+gen_info " Please enter the Repository Server Password : \n"
+
 
 #password='*******'
 
