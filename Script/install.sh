@@ -29,9 +29,11 @@ check_package () {
       grep "$1" ./Packages/package.version > ./Packages/package.tmp
       cat ./Packages/package.tmp |sort -r |head -1
       latest_version=`cat ./Packages/package.tmp |sort -r |head -1`
+      echo $latest_version
+      echo $2
       sshpass -p "$2" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
       du -sch ./Packages/Repository/$latest_version
-      
+
       FILE=./Packages/Repository/$latest_version
          FILE=./Packages/Repository/$latest_version
          if [ -f "$FILE" ]; then
