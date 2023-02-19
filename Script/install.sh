@@ -12,9 +12,30 @@ art_hibernate_prop=/dacx/var/ameyo/dacxdata/ameyo.art.product/conf/hibernate.pro
 art_ini=/dacx/var/ameyo/dacxdata/ameyo.art.product/conf/AmeyoART.ini
 
 server_hibernate_prop=/dacx/var/ameyo/dacxdata/com.drishti.dacx.server.product/conf/hibernate.properties
+server_log=/dacx/var/ameyo/dacxdata/log/scripts/AppServerStart.log
 
 pg_hba_conf=/var/lib/pgsql/10/data/pg_hba.conf
 psql_conf=/ameyo_mnt/var_pgsql/pgsql/10/data/postgresql.conf
+
+
+gen_banner () {
+
+echo "";echo "";echo ""
+echo $1
+echo "";echo "";echo ""
+}
+gen_header () {
+
+echo "";echo "";echo ""
+echo $1
+echo "";echo "";echo ""
+}
+gen_info () {
+
+echo "";echo "";echo ""
+echo $1
+
+}
 
 service_check () {
    service=$1
@@ -54,6 +75,11 @@ apply_patch () {
    fi
    if [[ "$service" == "appserver" ]]; then
       sed -i -e "/^hibernate.connection.url/s/oneproduct/ameyodb/" $server_hibernate_prop
+      tail -20 $server_log
+      gen_info " Please check the log : $server_log"
+
+      
+
    fi
    if [[ "$service" == "postgresql" ]]; then
          /usr/pgsql-10/bin/postgresql-10-setup initdb
@@ -121,24 +147,6 @@ check_package () {
    fi
 }
 
-gen_banner () {
-
-echo "";echo "";echo ""
-echo $1
-echo "";echo "";echo ""
-}
-gen_header () {
-
-echo "";echo "";echo ""
-echo $1
-echo "";echo "";echo ""
-}
-gen_info () {
-
-echo "";echo "";echo ""
-echo $1
-echo "";echo "";echo ""
-}
 
 
 
