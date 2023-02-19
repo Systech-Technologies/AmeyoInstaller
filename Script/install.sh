@@ -89,6 +89,16 @@ do
          systemctl status djinn.service
       fi
       if grep -q "asterisk13" <<< "$package"; then
+         ll /usr/lib64/libcrypto.so.1.0.0
+         status=$?
+         if [[ $status -ne 0 ]];then
+            ln -s /usr/lib64/libcrypto.so /usr/lib64/libcrypto.so.1.0.0
+         fi
+         ll /usr/lib64/libcrypto.so
+         status=$?
+         if [[ $status -ne 0 ]];then
+            ln -s  /usr/lib64/libssl.so  /usr/lib64/libssl.so.1.0.0
+         fi
          ameyoctl service asterisk13 restart
          ameyoctl service asterisk13 status
       fi
