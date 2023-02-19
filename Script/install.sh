@@ -30,6 +30,8 @@ check_package () {
       cat ./Packages/package.tmp |sort -r |head -1
       latest_version=`cat ./Packages/package.tmp |sort -r |head -1`
       sshpass -p "$2" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
+      du -sch ./Packages/Repository/$latest_version
+      
       FILE=./Packages/Repository/$latest_version
          FILE=./Packages/Repository/$latest_version
          if [ -f "$FILE" ]; then
@@ -86,6 +88,7 @@ do
          ameyoctl service asterisk13 status
       fi
       if grep -q "ameyo-art" <<< "$package"; then
+
          createdb -U postgres art_configuration_db
          createdb -U postgres reportsdb
          sed -i -e "/^hibernate.connection.url/s/ameyo_archiver_db/art_configuration_db/" /dacx/var/ameyo/dacxdata/ameyo.art.product/conf/hibernate.properties
