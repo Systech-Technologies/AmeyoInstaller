@@ -68,6 +68,7 @@ apply_patch () {
          ameyoctl confmanager postgres -cas
          createdb -U postgres ameyodb
    fi
+   
 }
 
 check_package () {
@@ -96,6 +97,10 @@ check_package () {
       fi
    else
       echo "Package: $1 | Not yet installed |pulling the Package"
+      if grep -q "ameyo-zabbix" <<< "$package"; then
+         zabbix_agent=`rpm -qa |grep zabbix-agent`
+         rpm -e $zabbix_agent
+      fi
       grep "$1" $package_version > $package_tmp_path
       cat $package_tmp_path |sort -r |head -1
       latest_version=`cat $package_tmp_path |sort -r |head -1`
@@ -161,11 +166,11 @@ do
          apply_patch postgresql
          service_check postgresql
 
-
-
          ameyoctl service postgresql status
       fi
    else
+      #zabbix_agent=`rpm -qa |grep zabbix-agent`
+
       check_package "$package" "$password"
       if grep -q "ameyo-server" <<< "$package"; then
          apply_patch appserver
@@ -188,8 +193,12 @@ do
       if grep -q "ameyo-art" <<< "$package"; then
          apply_patch ameyo-art
          service_check asterisk13
-
       fi
+      if grep -q "ameyo-zabbix" <<< "$package"; then
+         apply_patch ameyo-zabbix
+         #service_check asterisk13
+      fi
+
       
    fi
    echo " ---- Completed : $package ----- "
