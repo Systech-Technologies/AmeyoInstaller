@@ -139,7 +139,7 @@ gen_banner " --- Welcome to Ameyo Package Installer Script --- "
 
 gen_header " ----- !!!!!      Generating the Latest Package List      !!!!! ----- "
 
-gen_info " Please enter the Repository Server Password : \n"
+gen_info " Please enter the Repository Server Password : "
 
 
 #password='*******'
@@ -154,7 +154,7 @@ do
    echo "Package : $package"
    if grep -q "postgres" <<< "$package"; then
       echo "Fresh Install ?  initilize DB ?(Y/N)"
-      read dbresp
+      read -p "Password: " dbresp; echo
       if [[ "$dbresp" == "Y" ]]; then
          apply_patch postgresql
          service_check postgresql
