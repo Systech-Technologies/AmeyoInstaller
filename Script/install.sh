@@ -1,20 +1,88 @@
 #!/bin/bash
 
+
+#Paths
+tmp_file_path=./tmp
+package_tmp_path=./Packages/package.tmp
+package_version=./Packages/package.version
+repository_dir=./Packages/Repository
+service_status=$tmp_file_path/service.status
+
+art_hibernate_prop=/dacx/var/ameyo/dacxdata/ameyo.art.product/conf/hibernate.properties
+art_ini=/dacx/var/ameyo/dacxdata/ameyo.art.product/conf/AmeyoART.ini
+
+server_hibernate_prop=/dacx/var/ameyo/dacxdata/com.drishti.dacx.server.product/conf/hibernate.properties
+
+pg_hba_conf=/var/lib/pgsql/10/data/pg_hba.conf
+psql_conf=/ameyo_mnt/var_pgsql/pgsql/10/data/postgresql.conf
+
+service_check () {
+   service=$1
+   ameyoctl service $service status > $service_status
+   grep NOT_RUNNING $service_status
+   status=$?
+   if [[ $status -eq 0 ]];then
+      ameyoctl service $service restart
+   else
+      grep RUNNING $service_status
+   fi
+
+}
+
+apply_patch () {
+   service=$1
+   if [[ "$service" == "asterisk13" ]]; then
+      ls -al /usr/lib64/libcrypto.so.1.0.0
+      status=$?
+      if [[ $status -ne 0 ]];then
+         ln -s /usr/lib64/libcrypto.so /usr/lib64/libcrypto.so.1.0.0
+      fi
+      ls -al /usr/lib64/libcrypto.so
+      status=$?
+      if [[ $status -ne 0 ]];then
+         ln -s  /usr/lib64/libssl.so  /usr/lib64/libssl.so.1.0.0
+      fi
+   fi
+   if [[ "$service" == "ameyo-art" ]]; then
+      createdb -U postgres art_configuration_db
+      createdb -U postgres reportsdb
+      sed -i -e "/^hibernate.connection.url/s/ameyo_archiver_db/art_configuration_db/" $art_hibernate_prop
+      sed -i -e "/^archiverSourceDbUrl/s/127.0.0.1/localhost/" $art_ini
+      sed -i -e "/^archiverDestinationDbUrl/s/127.0.0.1/localhost/" $art_ini
+   fi
+   if [[ "$service" == "appserver" ]]; then
+      sed -i -e "/^hibernate.connection.url/s/oneproduct/ameyodb/" $server_hibernate_prop
+   fi
+   if [[ "$service" == "postgresql" ]]; then
+         /usr/pgsql-10/bin/postgresql-10-setup initdb
+         updatedb
+         sed -i -e "/^host/s/ident/trust/" $pg_hba_conf
+         sed -i -e "/^local/s/peer/trust/" $pg_hba_conf
+
+         sed -i -e "/^#listen_addresses/s/#//" $psql_conf
+         sed -i -e "/^listen_addresses/s/localhost/*/" $psql_conf
+         sed -i -e "/^max_connections/s/100/700/" $psql_conf
+         systemctl restart postgresql-10.service
+         ameyoctl confmanager postgres -cas
+         createdb -U postgres ameyodb
+   fi
+}
+
 check_package () {
-   rpm -qa |grep "$1" > ./Packages/package.tmp
+   rpm -qa |grep "$1" > $package_tmp_path
    status=$?
    if [[ $status -eq 0 ]];
    then
-      grep "$1" ./Packages/package.version >> ./Packages/package.tmp
-      cat ./Packages/package.tmp |sort -r |head -1
-      latest_version=`cat ./Packages/package.tmp |sort -r |head -1`
+      grep "$1" $package_version >> $package_tmp_path
+      cat $package_tmp_path |sort -r |head -1
+      latest_version=`cat $package_tmp_path |sort -r |head -1`
       #if [[ "$1" == *"$latest_version"* ]]; then
       if grep -q "$1" <<< "$latest_version"; then
          echo "Package: $1 | version is up to date"
       else
          echo "Package: $1 | has an updated version"
-         sshpass -p "$2" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
-         FILE=./Packages/Repository/$latest_version
+         sshpass -p "$2" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version $repository_dir
+         FILE=$repository_dir/$latest_version
          if [ -f "$FILE" ]; then
             rpm -Uvh $FILE
             rpm -qa |grep "$1"
@@ -26,15 +94,15 @@ check_package () {
       fi
    else
       echo "Package: $1 | Not yet installed |pulling the Package"
-      grep "$1" ./Packages/package.version > ./Packages/package.tmp
-      cat ./Packages/package.tmp |sort -r |head -1
-      latest_version=`cat ./Packages/package.tmp |sort -r |head -1`
+      grep "$1" $package_version > $package_tmp_path
+      cat $package_tmp_path |sort -r |head -1
+      latest_version=`cat $package_tmp_path |sort -r |head -1`
       echo $latest_version
-      sshpass -p "$2" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version ./Packages/Repository
-      du -sch ./Packages/Repository/$latest_version
+      sshpass -p "$2" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -P 2242 haseebkc@ccu.systech.ae:/dacx/Ameyo_package/$latest_version $repository_dir
+      du -sch $repository_dir/$latest_version
 
-      FILE=./Packages/Repository/$latest_version
-         FILE=./Packages/Repository/$latest_version
+      FILE=$repository_dir/$latest_version
+         FILE=$repository_dir/$latest_version
          if [ -f "$FILE" ]; then
             rpm -Uvh $FILE
             rpm -qa |grep "$1"
@@ -55,7 +123,7 @@ echo " Please enter the Repository Server Password"
 stty -echo
 read -p "Password: " password; echo
 stty echo
-sshpass -p "$password" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyChecking no" "cd /dacx/Ameyo_package;ls" > ./Packages/package.version
+sshpass -p "$password" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyChecking no" "cd /dacx/Ameyo_package;ls" > $package_version
 
 for package in `cat ./Packages/package.list`
 do
@@ -64,64 +132,36 @@ do
       echo "Fresh Install ?  initilize DB ?(Y/N)"
       read dbresp
       if [[ "$dbresp" == "Y" ]]; then
-         /usr/pgsql-10/bin/postgresql-10-setup initdb
-         updatedb
-         sed -i -e "/^host/s/ident/trust/" /var/lib/pgsql/10/data/pg_hba.conf
-         sed -i -e "/^local/s/peer/trust/" /var/lib/pgsql/10/data/pg_hba.conf
+         apply_patch postgresql
+         service_check postgresql
 
-         sed -i -e "/^#listen_addresses/s/#//" /ameyo_mnt/var_pgsql/pgsql/10/data/postgresql.conf
-         sed -i -e "/^listen_addresses/s/localhost/*/" /ameyo_mnt/var_pgsql/pgsql/10/data/postgresql.conf
-         sed -i -e "/^max_connections/s/100/700/" /ameyo_mnt/var_pgsql/pgsql/10/data/postgresql.conf
-         systemctl restart postgresql-10.service
-         ameyoctl confmanager postgres -cas
-         createdb -U postgres ameyodb
 
-         
+
          ameyoctl service postgresql status
       fi
    else
       check_package "$package" "$password"
       if grep -q "ameyo-server" <<< "$package"; then
-         sed -i -e "/^hibernate.connection.url/s/oneproduct/ameyodb/" /dacx/var/ameyo/dacxdata/com.drishti.dacx.server.product/conf/hibernate.properties
+         apply_patch appserver
+         service_check appserver
       fi
       if grep -q "ameyo-djinn" <<< "$package"; then
          systemctl start djinn.service
          systemctl status djinn.service
       fi
       if grep -q "ameyocrm" <<< "$package"; then
-         ameyoctl service crm restart
-         ameyoctl service crm status
+         service_check asterisk13
       fi
       if grep -q "acp" <<< "$package"; then
-         ameyoctl service acp status |grep NOT_RUNNING
-         status=$?
-         if [[ $status -eq 0 ]];then
-            ameyoctl service acp restart
-         fi
-
+         service_check acp
       fi
       if grep -q "asterisk13" <<< "$package"; then
-         ls -al /usr/lib64/libcrypto.so.1.0.0
-         status=$?
-         if [[ $status -ne 0 ]];then
-            ln -s /usr/lib64/libcrypto.so /usr/lib64/libcrypto.so.1.0.0
-         fi
-         ls -al /usr/lib64/libcrypto.so
-         status=$?
-         if [[ $status -ne 0 ]];then
-            ln -s  /usr/lib64/libssl.so  /usr/lib64/libssl.so.1.0.0
-         fi
-         ameyoctl service asterisk13 restart
-         ameyoctl service asterisk13 status
+         apply_patch asterisk13
+         service_check asterisk13
       fi
       if grep -q "ameyo-art" <<< "$package"; then
-
-         createdb -U postgres art_configuration_db
-         createdb -U postgres reportsdb
-         sed -i -e "/^hibernate.connection.url/s/ameyo_archiver_db/art_configuration_db/" /dacx/var/ameyo/dacxdata/ameyo.art.product/conf/hibernate.properties
-         sed -i -e "/^archiverSourceDbUrl/s/127.0.0.1/localhost/" /dacx/var/ameyo/dacxdata/ameyo.art.product/conf/AmeyoART.ini
-         sed -i -e "/^archiverDestinationDbUrl/s/127.0.0.1/localhost/" /dacx/var/ameyo/dacxdata/ameyo.art.product/conf/AmeyoART.ini
-         ameyoctl service ameyoart start
+         apply_patch ameyo-art
+         service_check asterisk13
 
       fi
       
