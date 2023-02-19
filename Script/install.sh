@@ -46,8 +46,8 @@ check_package () {
 echo "Generating the Latest Package List"
 
 echo " Please enter the Repository Server Password"
-# read password
-password='ftea.com'
+read password
+#password='*******'
 sshpass -p "$password" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyChecking no" "cd /dacx/Ameyo_package;ls" > ./Packages/package.version
 
 for package in `cat ./Packages/package.list`
