@@ -36,11 +36,13 @@ apply_patch () {
       status=$?
       if [[ $status -ne 0 ]];then
          ln -s /usr/lib64/libcrypto.so /usr/lib64/libcrypto.so.1.0.0
+         ls -al /usr/lib64/libcrypto.so.1.0.0
       fi
-      ls -al /usr/lib64/libcrypto.so
+      ls -al /usr/lib64/libssl.so.1.0.0
       status=$?
       if [[ $status -ne 0 ]];then
          ln -s  /usr/lib64/libssl.so  /usr/lib64/libssl.so.1.0.0
+         ls -al /usr/lib64/libssl.so.1.0.0
       fi
    fi
    if [[ "$service" == "ameyo-art" ]]; then
@@ -154,7 +156,7 @@ do
    echo "Package : $package"
    if grep -q "postgres" <<< "$package"; then
       echo "Fresh Install ?  initilize DB ?(Y/N)"
-      read -p "Password: " dbresp; echo
+      read -p "initilize DB ?(Y/N): " dbresp; echo
       if [[ "$dbresp" == "Y" ]]; then
          apply_patch postgresql
          service_check postgresql
