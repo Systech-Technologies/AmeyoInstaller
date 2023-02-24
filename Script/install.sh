@@ -167,6 +167,14 @@ sshpass -p "$password" ssh -p 2242 haseebkc@ccu.systech.ae -q -o "StrictHostKeyC
 for package in `cat ./Packages/package.list`
 do
    echo "Package : $package"
+
+   gen_info "  Install Package $package   "
+   gen_info "  Press Enter to Continue  ... N to skip   "
+   
+   read inst_input
+   if [[ "$inst_input" == "N" ]]; then
+      continue
+   fi
    if grep -q "postgres" <<< "$package"; then
       echo "Fresh Install ?  initilize DB ?(Y/N)"
       read -p "initilize DB ?(Y/N): " dbresp; echo
@@ -189,7 +197,7 @@ do
          systemctl status djinn.service
       fi
       if grep -q "ameyocrm" <<< "$package"; then
-         service_check asterisk13
+         service_check ameyocrm
       fi
       if grep -q "acp" <<< "$package"; then
          service_check acp
@@ -200,7 +208,7 @@ do
       fi
       if grep -q "ameyo-art" <<< "$package"; then
          apply_patch ameyo-art
-         service_check asterisk13
+         service_check ameyo-art
       fi
       if grep -q "ameyo-zabbix" <<< "$package"; then
          apply_patch ameyo-zabbix
@@ -210,7 +218,6 @@ do
       
    fi
    echo " ---- Completed : $package ----- "
-   echo " ---- Press Enter to continue ----- "
-   read next
+
 done
 
